@@ -11,6 +11,12 @@ provider "tfe" {
   # Configuration options
 }
 
+
+variable "organization_name" {
+  description = "The name of the Terraform Cloud organization"
+  type        = string
+}
+
 variable "workspace_name" {
   description = "The name of the workspace to create the notification configuration for"
   type        = string
@@ -23,7 +29,7 @@ variable "webhook_url" {
 }
 
 data "tfe_organization" "org" {
-  name = "ai-debugging"
+  name = var.organization_name
 }
 
 data "tfe_workspace" "workspace" {
