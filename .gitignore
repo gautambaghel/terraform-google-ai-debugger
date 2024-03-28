@@ -1,5 +1,12 @@
-# Local .terraform directories
+# Local generated directories
+.ssh/
+.idea/
+.config/
+build/*
+plan.out
+plan.out.json
 **/.terraform/*
+cloud_functions/*/tests
 
 # .tfstate files
 *.tfstate
@@ -32,3 +39,4 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+.terraform.lock.hcl
