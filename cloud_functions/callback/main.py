@@ -62,8 +62,8 @@ def callback_handler(request):
         return http_message, http_code
 
     except Exception as e:
-        logging.exception("Run Task Callback error: {}".format(e))
-        http_message = "Internal Run Task Callback error occurred"
+        logging.exception("Terraform AI debugger Callback error: {}".format(e))
+        http_message = "Internal Terraform AI debugger Callback error occurred"
         http_code = 500
         logging.warning(f"{http_code} - {http_message}: {e}")
 
@@ -90,7 +90,7 @@ def validate_request(payload: dict) -> (bool, str):
 
 
 def patch(url: str, headers: dict, patch_status: str, patch_message: str) -> int:
-    """Calls back to Terraform Cloud with the result of the run task"""
+    """Calls back to Terraform Cloud with the response of Gemini"""
 
     # For details of payload and request see
     # https://developer.hashicorp.com/terraform/cloud-docs/api-docs/run-tasks/run-tasks-integration#run-task-callback

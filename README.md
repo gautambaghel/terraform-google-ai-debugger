@@ -17,7 +17,7 @@ provider google {
 
 The diagram below shows the Terraform AI debugger components leveraging low cost serverless Google Cloud resources.
 
-![diagram](assets/terraform-ai-debugger.png)
+![diagram](assets/debugger.png)
 
 Resources created in Google Cloud are:
 - API Gateway
