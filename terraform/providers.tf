@@ -13,3 +13,7 @@ provider "google" {
   region  = var.region
   credentials = "../../keys.json"
 }
+
+# provider "tfe" {
+#   # Configuration options
+# }

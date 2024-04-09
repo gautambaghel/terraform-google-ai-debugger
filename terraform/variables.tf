@@ -25,3 +25,13 @@ variable "tfc_api_key" {
   description = "Terraform Cloud API key for creating comments"
   type        = string
 }
+
+# variable "terraform_org_name" {
+#   description = "The name of the Terraform Cloud organization"
+#   type        = string
+# }
+
+# variable "terraform_workspace_name" {
+#   description = "The name of the workspace to create the notification configuration for"
+#   type        = string
+# }
