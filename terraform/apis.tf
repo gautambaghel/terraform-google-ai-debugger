@@ -10,7 +10,8 @@ resource "google_project_service" "apis" {
     "servicecontrol.googleapis.com",
     "servicemanagement.googleapis.com",
     "workflows.googleapis.com",
-    "serviceusage.googleapis.com"
+    "serviceusage.googleapis.com",
+    "aiplatform.googleapis.com"
   ])
 
   service                    = each.value
