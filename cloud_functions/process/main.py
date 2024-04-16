@@ -2,8 +2,9 @@ import logging
 import os
 import functions_framework
 import google.cloud.logging
-import terraform_cloud
+import google.cloud.secretmanager_v1
 import google_genai
+import terraform_cloud
 from typing import List
 
 # Setup google cloud logging and ignore errors if authentication fails
@@ -34,9 +35,19 @@ def process_handler(request):
         http_message = "{}"
 
         # Check if payload is valid
-        if payload and ("run_id" in payload and "tfc_api_key" in payload):
+        if payload and ("run_id" in payload and "tfc_api_secret_name" in payload):
             run_id = payload["run_id"]
-            tfc_api_key = payload["tfc_api_key"]
+            tfc_api_secret_name = payload["tfc_api_secret_name"]
+
+            # Get TFC API key from Secret Manager
+            tfc_api_key, secrets_mgr_error_msg = __get_terraform_cloud_key(tfc_api_secret_name)
+            if secrets_mgr_error_msg != "" or tfc_api_key == "":
+                logging.error(secrets_mgr_error_msg)
+                http_message = {"message": secrets_mgr_error_msg, "status": "failed"}
+                http_code = 422
+                return http_message, http_code
+            else:
+                logging.info("Secrets manager: successfully retrieved TFC API key")
 
             # Get error from Terraform Cloud
             run_error_response, run_error_json_msg = __get_run_error(tfc_api_key, run_id)
@@ -72,6 +83,20 @@ def process_handler(request):
 
         return http_message, http_code
 
+
+def __get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
+    message = ""
+    tfc_api_key = ""
+
+    try:
+        client = google.cloud.secretmanager_v1.SecretManagerServiceClient()
+        response = client.access_secret_version(request={"name": f"{tfc_api_secret_name}/versions/latest"})
+        tfc_api_key = response.payload.data.decode("UTF-8")
+    except Exception as e:
+        logging.warning("Warning: {}".format(e))
+        message = "Failed to get the Terraform Cloud API key. Please check the secrets manager id and TFC API key."
+
+    return tfc_api_key, message
 
 def __get_run_error(tfc_api_key: str, run_id: str) -> (dict, str):
     message = ""

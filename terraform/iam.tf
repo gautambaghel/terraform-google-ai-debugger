@@ -16,7 +16,8 @@ resource "google_service_account" "apigw" {
 
 # Allow access to the VertexAI endpoint, fine tune the role to the minimum required
 resource "google_project_iam_member" "project_viewer" {
-  member  = "serviceAccount:${google_service_account.cf_notification_process.email}"
-  project = var.project_id
-  role    = "roles/aiplatform.user"
+  for_each = toset(var.cf_process_roles)
+  member   = "serviceAccount:${google_service_account.cf_notification_process.email}"
+  project  = var.project_id
+  role     = each.value
 }

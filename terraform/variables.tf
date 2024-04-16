@@ -26,12 +26,18 @@ variable "tfc_api_key" {
   type        = string
 }
 
-# variable "terraform_org_name" {
-#   description = "The name of the Terraform Cloud organization"
-#   type        = string
-# }
+variable "cf_process_roles" {
+  description = "Roles to assign to the process cloud function"
+  type        = list(string)
+  default     = ["roles/aiplatform.user", "roles/secretmanager.secretAccessor"]
+}
 
-# variable "terraform_workspace_name" {
-#   description = "The name of the workspace to create the notification configuration for"
-#   type        = string
-# }
+variable "terraform_org_name" {
+  description = "The name of the Terraform Cloud organization"
+  type        = string
+}
+
+variable "terraform_workspace_name" {
+  description = "The name of the workspace to create the notification configuration for"
+  type        = string
+}

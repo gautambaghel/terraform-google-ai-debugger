@@ -32,17 +32,17 @@ resource "google_cloudfunctions2_function" "request" {
     available_cpu    = "1"
     available_memory = "192Mi"
     environment_variables = {
-      TFC_API_KEY           = var.tfc_api_key
-      HMAC_KEY              = var.hmac_key
       GOOGLE_PROJECT        = var.project_id
       GOOGLE_REGION         = var.region
+      HMAC_KEY              = var.hmac_key
+      TFC_API_SECRET_NAME   = google_secret_manager_secret.terraform_key.id
       NOTIFICATION_WORKFLOW = google_workflows_workflow.notification_workflow.name
     }
     ingress_settings                 = "ALLOW_ALL"
     max_instance_count               = 1
     max_instance_request_concurrency = 10
-    service_account_email            = google_service_account.cf_notification.email
     timeout_seconds                  = 30
+    service_account_email            = google_service_account.cf_notification.email
   }
 }
 

@@ -8,11 +8,9 @@ provider "google-beta" {
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
-  credentials = "../../keys.json"
+  project     = var.project_id
+  region      = var.region
 }
 
-# provider "tfe" {
-#   # Configuration options
-# }
+provider "tfe" {
+}

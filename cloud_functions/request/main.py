@@ -34,10 +34,10 @@ if "HMAC_KEY" in os.environ:
 else:
     HMAC_KEY = False
 
-if "TFC_API_KEY" in os.environ:
-    TFC_API_KEY = os.environ["TFC_API_KEY"]
+if "TFC_API_SECRET_NAME" in os.environ:
+    TFC_API_SECRET_NAME = os.environ["TFC_API_SECRET_NAME"]
 else:
-    TFC_API_KEY = False
+    TFC_API_SECRET_NAME = False
 
 if "GOOGLE_PROJECT" in os.environ:
     GOOGLE_PROJECT = os.environ["GOOGLE_PROJECT"]
@@ -74,8 +74,8 @@ def request_handler(request):
             http_message = "HMAC_KEY key environment variable missing on server"
             http_code = 500
             logging.error(http_message)
-        elif not TFC_API_KEY:
-            http_message = "TFC_API_KEY key environment variable missing on server"
+        elif not TFC_API_SECRET_NAME:
+            http_message = "TFC_API_SECRET_NAME key environment variable missing on server"
             http_code = 500
             logging.error(http_message)
         elif not GOOGLE_PROJECT:
@@ -98,7 +98,7 @@ def request_handler(request):
                 # Need to use request.get_data() for hmac digest
                 if __validate_hmac(HMAC_KEY, request.get_data(), signature):
                     try:
-                        request_payload["tfc_api_key"] = TFC_API_KEY
+                        request_payload["tfc_api_secret_name"] = TFC_API_SECRET_NAME
                         __execute_workflow(request_payload)
                         http_message = "OK"
                         http_code = 200
