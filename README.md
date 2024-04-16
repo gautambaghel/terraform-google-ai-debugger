@@ -2,16 +2,9 @@
 
 ## Overview
 
-```hcl
-provider google {
-  project = "__GOOGLE_PROJECT_ID__"
-}
-```
-```hcl
-provider google {
-  project = var.project
-}
-```
+The AI debugger for Terraform is a tool designed to address runtime issues, enhancing the identification and resolution of challenges in deploying developer infrastructure. It leverages Google Cloud services and Terraform Cloud to optimize the remediation process.
+
+![diagram](assets/debugger.gif)
 
 ## Architecture
 
@@ -24,6 +17,7 @@ Resources created in Google Cloud are:
 - Cloud Functions - callback, process, request
 - Cloud Storage Bucket
 - Service Accounts
+- Secrets Manager
 - Workflow
 - Vertex AI - Gemini Pro Text
 
@@ -50,9 +44,21 @@ Additional pre-requisites for cloud function development:
 Create a file in the terraform folder named terraform.tfvars.
 ```hcl
 project_id = "__GOOGLE_PROJECT__"
+tfc_api_key = "__TERRAFORM_CLOUD_API_KEY__"
+terraform_org_name = "__TERRAFORM_CLOUD_ORG_NAME__"
+terraform_workspace_names = ["__TF_WS_1_NAME__", "__TF_WS_2_NAME__"]
 ```
 
 - `project_id` - Google project id for deploying services
+- `tfc_api_key` - The Terraform Cloud API key, this could be the team (recommended) or user token
+- `terraform_org_name` - The Terraform Cloud organization name
+- `terraform_workspace_names` - The list of Terraform Cloud workspace names to attach debugger
+
+To format the Terraform config files use
+
+```bash
+terraform -chdir=terraform fmt
+```
 
 Execute the commands below to deploy the Google Cloud resources
 
@@ -61,19 +67,6 @@ terraform -chdir=terraform init
 terraform -chdir=terraform plan
 terraform -chdir=terraform apply
 ```
-
-To format the Terraform config files use
-
-```bash
-terraform -chdir=terraform fmt
-```
-
-### Terraform Cloud
-
-[Terraform Cloud](https://app.terraform.io) Notification set up is required next. Under the Terraform Cloud workspace go to `settings\notifications` add with the following settings:
-- Endpoint URL - Terraform output variable `api_gateway_endpoint_uri`
-- HMAC key - Should match the terraform input variable `hmac_key`
-- Notification even - select error
 
 ## Destroy
 

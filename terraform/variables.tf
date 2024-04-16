@@ -37,7 +37,7 @@ variable "terraform_org_name" {
   type        = string
 }
 
-variable "terraform_workspace_name" {
-  description = "The name of the workspace to create the notification configuration for"
-  type        = string
+variable "terraform_workspace_names" {
+  description = "The array of the workspace names to create the notification configuration"
+  type        = list(string)
 }
