@@ -1,5 +1,5 @@
 resource "google_secret_manager_secret" "terraform_key" {
-  secret_id = "terraform-cloud-api-key"
+  secret_id = "terraform-cloud-api-key-${random_string.suffix.result}"
 
   replication {
     auto {}

@@ -70,6 +70,12 @@ terraform -chdir=terraform apply
 
 ## Destroy
 
+A secrets manager secret is not destroyed by Terraform so delete it manually
+
+```bash
+gcloud secrets delete terraform-cloud-api-key-{random_str_here}
+```
+
 All the resources deployed to the Google Cloud project can be destroyed with the single command below
 
 ```bash
@@ -85,4 +91,9 @@ The cloud functions for the AI debugger are in the folders below:
 
 Cloud Function pytests have been created in the folder [cloud_functions/tests](cloud_functions/tests) to aid local development and unit testing.
 
-Terraform pytests have been created in the folder [tests](tests) to deploy, test and destroy resources.
+Terraform pytests have been created in the folder [tests](tests) to deploy, test and destroy resources, run them as follows:
+
+```bash
+cd tests/
+pipenv run test_default
+```
