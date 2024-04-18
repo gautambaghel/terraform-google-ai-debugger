@@ -40,17 +40,14 @@ def process_handler(request):
             tfc_api_secret_name = payload["tfc_api_secret_name"]
 
             # Get TFC API key from Secret Manager
-            tfc_api_key, secrets_mgr_error_msg = __get_terraform_cloud_key(tfc_api_secret_name)
+            tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(tfc_api_secret_name)
             if secrets_mgr_error_msg != "" or tfc_api_key == "":
-                logging.error(secrets_mgr_error_msg)
-                http_message = {"message": secrets_mgr_error_msg, "status": "failed"}
-                http_code = 422
-                return http_message, http_code
-            else:
-                logging.info("Secrets manager: successfully retrieved TFC API key")
+                return send_cloud_funtion_response(secrets_mgr_error_msg, 422, "error")
+
+            logging.info("Secrets manager: successfully retrieved Terraform Cloud API key")
 
             # Get error from Terraform Cloud
-            run_error_response, run_error_json_msg = __get_run_error(tfc_api_key, run_id)
+            run_error_response, run_error_json_msg = get_run_error(tfc_api_key, run_id)
             logging.info("Run error: " + str(run_error_response))
 
             proj = google_genai.GoogleProject()
@@ -58,33 +55,36 @@ def process_handler(request):
 
             logging.info("Gemini response: " + str(content))
 
-            # Create a comment in Terraform Cloud
-            comment_response_json, comment_json_msg = __attach_comment(content, tfc_api_key, run_id)
+            # Deliver the payload for callback Cloud Function
+            callback_payload = {
+                "tfc_api_secret_name": tfc_api_secret_name,
+                "content": content,
+                "run_id": run_id
+            }
 
-            http_message = {"message": comment_response_json, "status": "ok"}
-            http_code = 200
+            logging.info("Delivering payload to callback Cloud Function")
+            return send_cloud_funtion_response(callback_payload, 200, "info")
 
         else:
-            run_message = "Run id missing in request"
-            run_status = "failed"
-            http_message = {"message": run_message, "status": run_status}
-            http_code = 422
-            logging.warning(payload)
+            return send_cloud_funtion_response("Run ID or tfc_api_secret_name missing in request", 422, "error")
 
-        logging.info(f"{http_code} - {http_message}")
-
-        return http_message, http_code
     # Error occurred return message
     except Exception as e:
         logging.exception("Notification process error: {}".format(e))
-        http_message = "Internal Terraform Cloud notification 'process' error occurred"
-        http_code = 500
-        logging.warning(f"{http_code} - {http_message}: {e}")
-
-        return http_message, http_code
+        return send_cloud_funtion_response("Internal Terraform Cloud notification 'process' error occurred", 500, "error")
 
 
-def __get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
+def send_cloud_funtion_response(message: str, code: int, type: str) -> (dict, int):
+    if type == "error":
+        logging.error(f"{code} - {message}")
+        status = "failed"
+    elif type == "info":
+        status = "OK"
+
+    return {"message": message, "status": status}, code
+
+
+def get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
     message = ""
     tfc_api_key = ""
 
@@ -93,31 +93,20 @@ def __get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
         response = client.access_secret_version(request={"name": f"{tfc_api_secret_name}/versions/latest"})
         tfc_api_key = response.payload.data.decode("UTF-8")
     except Exception as e:
-        logging.warning("Warning: {}".format(e))
-        message = "Failed to get the Terraform Cloud API key. Please check the secrets manager id and TFC API key."
+        logging.exception("Exception: {}".format(e))
+        message = "Failed to get the Terraform Cloud API key. Please check the secrets manager id and Terraform Cloud API key."
 
     return tfc_api_key, message
 
-def __get_run_error(tfc_api_key: str, run_id: str) -> (dict, str):
+
+def get_run_error(tfc_api_key: str, run_id: str) -> (dict, str):
     message = ""
     run_error_response = ""
 
     try:
         run_error_response = terraform_cloud.get_run_error(tfc_api_key, run_id)
     except Exception as e:
-        logging.warning("Warning: {}".format(e))
-        message = "Failed to get error from the run in Terraform Cloud. Please check the Run id and TFC API key."
+        logging.exception("Exception: {}".format(e))
+        message = "Failed to get error from the run in Terraform Cloud. Please check the Run id and Terraform Cloud API key."
 
     return run_error_response, message
-
-def __attach_comment(comment: str, tfc_api_key: str, run_id: str) -> (dict, str):
-    message = ""
-    comment_response_json = {}
-
-    try:
-        comment_response_json = terraform_cloud.attach_comment(comment, tfc_api_key, run_id)
-    except Exception as e:
-        logging.warning("Warning: {}".format(e))
-        message = "Failed to create comment in Terraform Cloud. Please check the Run id and TFC API key."
-
-    return comment_response_json, message

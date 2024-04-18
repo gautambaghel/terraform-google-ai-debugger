@@ -29,7 +29,7 @@ variable "tfc_api_key" {
 variable "cf_process_roles" {
   description = "Roles to assign to the process cloud function"
   type        = list(string)
-  default     = ["roles/aiplatform.user", "roles/secretmanager.secretAccessor"]
+  default     = ["roles/aiplatform.user", "roles/secretmanager.secretAccessor", "roles/workflows.invoker"]
 }
 
 variable "terraform_org_name" {

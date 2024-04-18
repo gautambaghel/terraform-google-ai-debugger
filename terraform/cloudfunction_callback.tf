@@ -35,7 +35,7 @@ resource "google_cloudfunctions2_function" "callback" {
     max_instance_count               = 1
     max_instance_request_concurrency = 10
     timeout_seconds                  = 30
-    service_account_email            = google_service_account.cf_notification.email
+    service_account_email            = google_service_account.cf_callback.email
   }
 }
 

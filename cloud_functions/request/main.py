@@ -91,15 +91,15 @@ def request_handler(request):
             http_code = 500
             logging.error(http_message)
         elif request_payload:
-            result, message = __validate_request(request_headers, request_payload)
+            result, message = validate_request(request_headers, request_payload)
             if result:
                 # Check HMAC signature
                 signature = request_headers['x-tfe-notification-signature']
                 # Need to use request.get_data() for hmac digest
-                if __validate_hmac(HMAC_KEY, request.get_data(), signature):
+                if validate_hmac(HMAC_KEY, request.get_data(), signature):
                     try:
                         request_payload["tfc_api_secret_name"] = TFC_API_SECRET_NAME
-                        __execute_workflow(request_payload)
+                        execute_workflow(request_payload)
                         http_message = "OK"
                         http_code = 200
                     except Exception as e:
@@ -126,7 +126,7 @@ def request_handler(request):
         return http_message, http_code
 
 
-def __validate_request(headers, payload) -> (bool, str):
+def validate_request(headers, payload) -> (bool, str):
     """Validate request values"""
 
     result = True
@@ -165,7 +165,7 @@ def __validate_request(headers, payload) -> (bool, str):
     return result, message
 
 
-def __validate_hmac(key: str, payload: str, signature: str) -> bool:
+def validate_hmac(key: str, payload: str, signature: str) -> bool:
     """Returns true if the x-tfe-notification-signature header matches the SHA512 digest of the payload"""
 
     digest = hmac.new(bytes(key, 'utf-8'), msg=payload, digestmod=hashlib.sha512).hexdigest()
@@ -177,7 +177,7 @@ def __validate_hmac(key: str, payload: str, signature: str) -> bool:
     return result
 
 
-def __execute_workflow(payload: dict, project: str = GOOGLE_PROJECT, location: str = GOOGLE_REGION,
+def execute_workflow(payload: dict, project: str = GOOGLE_PROJECT, location: str = GOOGLE_REGION,
                        workflow: str = NOTIFICATION_WORKFLOW) -> Execution:
     """
     Execute a workflow and print the execution results

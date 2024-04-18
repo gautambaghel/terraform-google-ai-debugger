@@ -10,15 +10,3 @@ resource "google_workflows_workflow" "notification_workflow" {
     }
   )
 }
-
-resource "google_project_iam_member" "workflows_invoker_1" {
-  member  = "serviceAccount:${google_service_account.cf_notification.email}"
-  project = var.project_id
-  role    = "roles/workflows.invoker"
-}
-
-resource "google_project_iam_member" "workflows_invoker_2" {
-  member  = "serviceAccount:${google_service_account.cf_notification_process.email}"
-  project = var.project_id
-  role    = "roles/workflows.invoker"
-}
