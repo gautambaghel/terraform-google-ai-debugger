@@ -16,14 +16,18 @@ def get_run_error(tfc_api_key: str, run_id: str) -> str:
         "Content-Type": "application/vnd.api+json",
     }
 
-    url = f"https://app.terraform.io/api/v2/runs/{run_id}/plan"
-    plan_response = requests.get(url, headers=headers)
+    url = f"https://app.terraform.io/api/v2/runs/{run_id}"
+    response = requests.get(f"{url}/plan", headers=headers)
+    if response.json()["data"]["attributes"]["status"] == "errored":
+        logs_url = response.json()["data"]["attributes"]["log-read-url"]
+        return requests.get(logs_url).text
+    
+    response = requests.get(f"{url}/apply", headers=headers)
+    if response.json()["data"]["attributes"]["status"] == "errored":
+        logs_url = response.json()["data"]["attributes"]["log-read-url"]
+        return requests.get(logs_url).text
 
-    # TODO: Add the apply error condition
-    logs_url = plan_response.json()["data"]["attributes"]["log-read-url"]
-    response = requests.get(logs_url)
-
-    return response.text
+    return "Terraform run successfully completed!"
 
 if __name__ == "__main__":
 
