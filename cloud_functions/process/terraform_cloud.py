@@ -21,7 +21,7 @@ def get_run_error(tfc_api_key: str, run_id: str) -> str:
     if response.json()["data"]["attributes"]["status"] == "errored":
         logs_url = response.json()["data"]["attributes"]["log-read-url"]
         return requests.get(logs_url).text
-    
+
     response = requests.get(f"{url}/apply", headers=headers)
     if response.json()["data"]["attributes"]["status"] == "errored":
         logs_url = response.json()["data"]["attributes"]["log-read-url"]

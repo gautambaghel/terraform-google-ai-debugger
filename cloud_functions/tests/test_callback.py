@@ -89,7 +89,7 @@ def test_attach_comment_success(mock_post):
 def test_attach_comment_failure(mock_post):
     mock_response = mock_post.return_value
     mock_response.status_code = 400
-    
+
     comment_response, message = main.attach_comment("This is a test comment", "my-api-key", "run-id")
 
     assert comment_response == {}

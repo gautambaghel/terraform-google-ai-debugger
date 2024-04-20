@@ -81,7 +81,7 @@ def test_get_terraform_cloud_key_failure(mock_secret_manager):
     mock_secret_manager.side_effect = Exception('Mocked Error')
     api_key, message = main.get_terraform_cloud_key('test-secret-name')
     assert api_key == ''
-    assert message != '' 
+    assert message != ''
 
 
 def test_send_cloud_funtion_response_error():

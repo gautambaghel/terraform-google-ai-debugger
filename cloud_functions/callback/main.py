@@ -80,7 +80,7 @@ def validate_request(payload: dict) -> (bool, str):
     if not payload.get("content"):
         message = "Content missing in request"
         return False, message
-    
+
     if not payload.get("run_id"):
         message = "run_id missing in request"
         return False, message

@@ -35,7 +35,7 @@ resource "google_project_iam_member" "cf_process_roles" {
 
 # Allow access to the Secrets Manager services
 resource "google_project_iam_member" "cf_callback_roles" {
-  project  = var.project_id
-  member   = "serviceAccount:${google_service_account.cf_callback.email}"
-  role     = "roles/secretmanager.secretAccessor"
+  project = var.project_id
+  member  = "serviceAccount:${google_service_account.cf_callback.email}"
+  role    = "roles/secretmanager.secretAccessor"
 }
