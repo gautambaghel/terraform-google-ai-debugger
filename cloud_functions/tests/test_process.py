@@ -12,7 +12,9 @@ from process import google_genai
 
 
 def test_process_handler_valid(mocker):
-    mock_generate_content = mocker.patch("google_genai.GoogleGenAI.generate_content", return_value="Gemini response")
+    mock_generate_content = mocker.patch(
+        "google_genai.GoogleGenAI.generate_content", return_value="Gemini response"
+    )
 
     class MockRequest:
         def __init__(self, model):
@@ -25,7 +27,7 @@ def test_process_handler_valid(mocker):
                 generation_config={
                     "max_output_tokens": 5535,
                     "temperature": 0.7,
-                    "top_p": 1
+                    "top_p": 1,
                 },
                 safety_settings={},
                 stream=stream,
@@ -49,10 +51,13 @@ def test_process_handler_valid(mocker):
 
 
 # Test send_cloud_funtion_response
-@pytest.mark.parametrize("message, code, type, expected_status", [
-    ("Error message", 500, "error", "failed"),
-    ("Info message", 200, "info", "OK"),
-])
+@pytest.mark.parametrize(
+    "message, code, type, expected_status",
+    [
+        ("Error message", 500, "error", "failed"),
+        ("Info message", 200, "info", "OK"),
+    ],
+)
 def test_send_cloud_funtion_response(message, code, type, expected_status):
     response, status_code = main.send_cloud_funtion_response(message, code, type)
 
@@ -63,25 +68,27 @@ def test_send_cloud_funtion_response(message, code, type, expected_status):
 
 @pytest.fixture
 def mock_secret_manager(mocker):
-    mock_client = mocker.patch('google.cloud.secretmanager_v1.SecretManagerServiceClient')
+    mock_client = mocker.patch(
+        "google.cloud.secretmanager_v1.SecretManagerServiceClient"
+    )
     mock_access = mock_client.return_value.access_secret_version
-    mock_access.return_value.payload.data = b'test_api_key'
+    mock_access.return_value.payload.data = b"test_api_key"
     return mock_access
 
 
-@patch('main.get_terraform_cloud_key')
+@patch("main.get_terraform_cloud_key")
 def test_get_terraform_cloud_key_success(mock_secret_manager):
-    api_key, message = main.get_terraform_cloud_key('test-secret-name')
-    assert api_key == 'test_api_key'
-    assert message == ''
+    api_key, message = main.get_terraform_cloud_key("test-secret-name")
+    assert api_key == "test_api_key"
+    assert message == ""
 
 
-@patch('main.get_terraform_cloud_key')
+@patch("main.get_terraform_cloud_key")
 def test_get_terraform_cloud_key_failure(mock_secret_manager):
-    mock_secret_manager.side_effect = Exception('Mocked Error')
-    api_key, message = main.get_terraform_cloud_key('test-secret-name')
-    assert api_key == ''
-    assert message != ''
+    mock_secret_manager.side_effect = Exception("Mocked Error")
+    api_key, message = main.get_terraform_cloud_key("test-secret-name")
+    assert api_key == ""
+    assert message != ""
 
 
 def test_send_cloud_funtion_response_error():
@@ -101,25 +108,36 @@ def test_send_cloud_funtion_response_info():
     assert response["status"] == "OK"
     assert status_code == code
 
+
 # Test get_terraform_cloud_key with success
 def test_get_terraform_cloud_key_success(mocker):
-    mock_client = mocker.patch("main.google.cloud.secretmanager_v1.SecretManagerServiceClient")
-    mock_client.return_value.access_secret_version.return_value.payload.data = b"api-key"
+    mock_client = mocker.patch(
+        "main.google.cloud.secretmanager_v1.SecretManagerServiceClient"
+    )
+    mock_client.return_value.access_secret_version.return_value.payload.data = (
+        b"api-key"
+    )
 
     api_key, message = main.get_terraform_cloud_key("secret-name")
 
     assert api_key == "api-key"
     assert message == ""
 
+
 # Test get_terraform_cloud_key with failure
 def test_get_terraform_cloud_key_failure(mocker):
-    mock_client = mocker.patch("main.google.cloud.secretmanager_v1.SecretManagerServiceClient")
-    mock_client.return_value.access_secret_version.side_effect = Exception("Secret not found")
+    mock_client = mocker.patch(
+        "main.google.cloud.secretmanager_v1.SecretManagerServiceClient"
+    )
+    mock_client.return_value.access_secret_version.side_effect = Exception(
+        "Secret not found"
+    )
 
     api_key, message = main.get_terraform_cloud_key("secret-name")
 
     assert api_key == ""
     assert message != ""
+
 
 # Test get_run_error with success
 def test_get_run_error_success(mocker):
@@ -131,6 +149,7 @@ def test_get_run_error_success(mocker):
 
     assert response == sample_run_error_response
     assert message == ""
+
 
 # Test get_run_error with failure
 def test_get_run_error_failure(mocker):

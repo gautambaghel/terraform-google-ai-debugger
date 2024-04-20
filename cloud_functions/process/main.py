@@ -1,10 +1,11 @@
-import logging
 import os
+import json
+import genai
+import logging
+import terraform_cloud
 import functions_framework
 import google.cloud.logging
 import google.cloud.secretmanager_v1
-import google_genai
-import terraform_cloud
 from typing import List
 
 # Setup google cloud logging and ignore errors if authentication fails
@@ -29,7 +30,9 @@ else:
 def process_handler(request):
     try:
         logging.info("headers: " + str(request.headers))
-        logging.info("payload: " + str(request.get_data())) # Remove API token and log the payload
+        logging.info(
+            "payload: " + str(request.get_data())
+        )  # Remove API token and log the payload
 
         payload = request.get_json(silent=True)
         http_message = "{}"
@@ -38,40 +41,53 @@ def process_handler(request):
         if payload and ("run_id" in payload and "tfc_api_secret_name" in payload):
             run_id = payload["run_id"]
             tfc_api_secret_name = payload["tfc_api_secret_name"]
+            ai_config_json = payload["ai_config_json"]
 
             # Get TFC API key from Secret Manager
-            tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(tfc_api_secret_name)
+            tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(
+                tfc_api_secret_name
+            )
             if secrets_mgr_error_msg != "" or tfc_api_key == "":
                 return send_cloud_funtion_response(secrets_mgr_error_msg, 422, "error")
 
-            logging.info("Secrets manager: successfully retrieved Terraform Cloud API key")
+            logging.info(
+                "Secrets manager: successfully retrieved Terraform Cloud API key"
+            )
 
             # Get error from Terraform Cloud
             run_error_response, run_error_json_msg = get_run_error(tfc_api_key, run_id)
             logging.info("Run error: " + str(run_error_response))
 
-            proj = google_genai.GoogleGenAI()
-            content = proj.generate_content(run_error_response, stream=False)
+            ai = genai.GenAI(ai_config_json)
+            ai_response = ai.generate_content(run_error_response)
+            json_content = json.loads(ai_response)
+            content = json_content.get("output")
 
-            logging.info("Gemini response: " + str(content))
+            logging.info("Azure AI response: " + content)
 
             # Deliver the payload for callback Cloud Function
             callback_payload = {
                 "tfc_api_secret_name": tfc_api_secret_name,
                 "content": content,
-                "run_id": run_id
+                "run_id": run_id,
             }
 
             logging.info("Delivering payload to callback Cloud Function")
             return send_cloud_funtion_response(callback_payload, 200, "info")
 
         else:
-            return send_cloud_funtion_response("Run ID or tfc_api_secret_name missing in request", 422, "error")
+            return send_cloud_funtion_response(
+                "Run ID or tfc_api_secret_name missing in request", 422, "error"
+            )
 
     # Error occurred return message
     except Exception as e:
         logging.exception("Notification process error: {}".format(e))
-        return send_cloud_funtion_response("Internal Terraform Cloud notification 'process' error occurred", 500, "error")
+        return send_cloud_funtion_response(
+            "Internal Terraform Cloud notification 'process' error occurred",
+            500,
+            "error",
+        )
 
 
 def send_cloud_funtion_response(message: str, code: int, type: str) -> (dict, int):
@@ -90,7 +106,9 @@ def get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
 
     try:
         client = google.cloud.secretmanager_v1.SecretManagerServiceClient()
-        response = client.access_secret_version(request={"name": f"{tfc_api_secret_name}/versions/latest"})
+        response = client.access_secret_version(
+            request={"name": f"{tfc_api_secret_name}/versions/latest"}
+        )
         tfc_api_key = response.payload.data.decode("UTF-8")
     except Exception as e:
         logging.exception("Exception: {}".format(e))

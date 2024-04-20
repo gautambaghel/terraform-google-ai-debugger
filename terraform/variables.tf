@@ -41,3 +41,8 @@ variable "terraform_workspace_names" {
   description = "The array of the workspace names to create the notification configuration"
   type        = list(string)
 }
+
+variable "ai_config_json" {
+  description = "The JSON configuration for the AI Plaform"
+  type        = string
+}

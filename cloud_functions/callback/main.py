@@ -14,8 +14,8 @@ if "DISABLE_GOOGLE_LOGGING" not in os.environ:
     except google.auth.exceptions.DefaultCredentialsError:
         pass
 
-if 'LOG_LEVEL' in os.environ:
-    logging.getLogger().setLevel(os.environ['LOG_LEVEL'])
+if "LOG_LEVEL" in os.environ:
+    logging.getLogger().setLevel(os.environ["LOG_LEVEL"])
     logging.info("LOG_LEVEL set to %s" % logging.getLogger().getEffectiveLevel())
 
 
@@ -34,15 +34,23 @@ def callback_handler(request):
 
             if request_valid:
                 # Get TFC API key from Secret Manager
-                tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(payload["tfc_api_secret_name"])
+                tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(
+                    payload["tfc_api_secret_name"]
+                )
 
                 if secrets_mgr_error_msg or not tfc_api_key:
-                    return send_cloud_funtion_response(secrets_mgr_error_msg, 422, "error")
+                    return send_cloud_funtion_response(
+                        secrets_mgr_error_msg, 422, "error"
+                    )
 
-                logging.info("Secrets manager: successfully retrieved Terraform Cloud API key")
+                logging.info(
+                    "Secrets manager: successfully retrieved Terraform Cloud API key"
+                )
 
                 # Send comment back to Terraform Cloud
-                comment_response_json, comment_error_msg = attach_comment(payload["content"], tfc_api_key, payload["run_id"])
+                comment_response_json, comment_error_msg = attach_comment(
+                    payload["content"], tfc_api_key, payload["run_id"]
+                )
                 if comment_error_msg:
                     return send_cloud_funtion_response(comment_error_msg, 422, "error")
 
@@ -50,13 +58,17 @@ def callback_handler(request):
             else:
                 return send_cloud_funtion_response(message, 422, "error")
         else:
-            return send_cloud_funtion_response("Payload missing in request", 422, "error")
+            return send_cloud_funtion_response(
+                "Payload missing in request", 422, "error"
+            )
 
         return send_cloud_funtion_response("Callback completed!", 200, "info")
 
     except Exception as e:
         logging.exception("Terraform AI debugger callback error: {}".format(e))
-        return send_cloud_funtion_response("Internal Terraform AI debugger callback error occurred", 500, "error")
+        return send_cloud_funtion_response(
+            "Internal Terraform AI debugger callback error occurred", 500, "error"
+        )
 
 
 def send_cloud_funtion_response(message: str, code: int, type: str) -> (dict, int):
@@ -94,7 +106,9 @@ def get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
 
     try:
         client = google.cloud.secretmanager_v1.SecretManagerServiceClient()
-        response = client.access_secret_version(request={"name": f"{tfc_api_secret_name}/versions/latest"})
+        response = client.access_secret_version(
+            request={"name": f"{tfc_api_secret_name}/versions/latest"}
+        )
         tfc_api_key = response.payload.data.decode("UTF-8")
     except Exception as e:
         logging.exception("Exception: {}".format(e))
@@ -113,14 +127,19 @@ def attach_comment(comment: str, tfc_api_key: str, run_id: str) -> (dict, str):
             "Content-Type": "application/vnd.api+json",
         }
 
-        data = json.dumps({
-            "data": {
-            "attributes": {
-                "body": f"{comment}"
-            },
-            "type": "comments"
-            }
-        })
+        payload = json.loads(comment)
+        output_array = payload.get("output")
+
+        markdown = ":sparkles: Terraform AI debugger (powered by Azure OpenAI) :sparkles: \n\n"
+        if output_array:
+            for i, output in enumerate(output_array):
+                markdown += f"* **Error {i+1}:**\n"
+                markdown += f"\t* **Summary**: {output['ai_err_summary']}\n"
+                markdown += f"\t* **Resolution**: {output['ai_err_resolution']}\n"
+
+        data = json.dumps(
+            {"data": {"attributes": {"body": f"{markdown}"}, "type": "comments"}}
+        )
 
         url = f"https://app.terraform.io/api/v2/runs/{run_id}/comments"
         response = requests.post(url, headers=headers, data=data)

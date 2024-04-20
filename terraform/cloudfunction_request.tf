@@ -35,6 +35,7 @@ resource "google_cloudfunctions2_function" "request" {
       GOOGLE_PROJECT        = var.project_id
       GOOGLE_REGION         = var.region
       HMAC_KEY              = var.hmac_key
+      AI_CONFIG_JSON        = var.ai_config_json
       TFC_API_SECRET_NAME   = google_secret_manager_secret.terraform_key.id
       NOTIFICATION_WORKFLOW = google_workflows_workflow.notification_workflow.name
     }
