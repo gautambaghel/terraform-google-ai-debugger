@@ -96,5 +96,5 @@ Terraform pytests have been created in the folder [tests](tests) to deploy, test
 ```bash
 cd tests/
 pipenv install
-pipenv run test_default
+pipenv run tests
 ```

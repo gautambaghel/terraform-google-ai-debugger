@@ -8,6 +8,7 @@ flask = "==2.3.2"
 vertexai = "==1.48.0"
 pytest = "==7.4.0"
 pytest-env = "==0.8.2"
+pytest-mock = "==3.14.0"
 requests-mock = "==1.12.1"
 functions-framework = "==3.4.0"
 google-cloud-logging = "==3.6.0"
@@ -15,7 +16,6 @@ google-cloud-workflows = "==1.14.3"
 google-cloud-secret-manager = "==2.19.0"
 google-cloud-error-reporting = "==1.9.2"
 google-cloud-resource-manager = "==1.10.2"
-pytest-mock = "*"
 
 [dev-packages]
 
@@ -23,4 +23,4 @@ pytest-mock = "*"
 python_version = "3.12"
 
 [scripts]
-test_default = "pytest"
+tests = "pytest"
