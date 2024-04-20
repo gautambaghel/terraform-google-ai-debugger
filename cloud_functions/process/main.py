@@ -50,7 +50,7 @@ def process_handler(request):
             run_error_response, run_error_json_msg = get_run_error(tfc_api_key, run_id)
             logging.info("Run error: " + str(run_error_response))
 
-            proj = google_genai.GoogleProject()
+            proj = google_genai.GoogleGenAI()
             content = proj.generate_content(run_error_response, stream=False)
 
             logging.info("Gemini response: " + str(content))

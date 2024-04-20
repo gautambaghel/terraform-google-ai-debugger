@@ -73,15 +73,15 @@ def send_cloud_funtion_response(message: str, code: int, type: str) -> (dict, in
 def validate_request(payload: dict) -> (bool, str):
     """Validate request values"""
 
-    if not payload["tfc_api_secret_name"]:
+    if not payload.get("tfc_api_secret_name"):
         message = "The Terraform Cloud API secret name missing in request"
         return False, message
 
-    if not payload["content"]:
+    if not payload.get("content"):
         message = "Content missing in request"
         return False, message
     
-    if not payload["run_id"]:
+    if not payload.get("run_id"):
         message = "run_id missing in request"
         return False, message
 

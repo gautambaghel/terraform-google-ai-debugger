@@ -129,40 +129,37 @@ def request_handler(request):
 def validate_request(headers, payload) -> (bool, str):
     """Validate request values"""
 
-    result = True
-    message = "OK"
-
     if headers is None:
         message = "Headers missing in request"
         logging.warning(message)
-        result = False
+        return False, message
 
-    elif payload is None:
+    if payload is None:
         message = "Payload missing in request"
         logging.warning(message)
-        result = False
+        return False, message
 
-    elif "x-tfe-notification-signature" not in headers:
+    if "x-tfe-notification-signature" not in headers:
         message = "Terraform notification signature missing"
         logging.warning(message)
-        result = False
+        return False, message
 
-    elif "organization_name" not in payload.keys():
+    if "organization_name" not in payload.keys():
         message = "Terraform payload missing : organization_name"
         logging.warning(message)
-        result = False
+        return False, message
 
-    elif "workspace_name" not in payload.keys():
+    if "workspace_name" not in payload.keys():
         message = "Terraform payload missing : workspace_name"
         logging.warning(message)
-        result = False
+        return False, message
 
-    elif TFC_ORG and payload["organization_name"] != TFC_ORG:
-        message = "Terraform Org verification failed : {}".format(payload["organization_name"])
+    if TFC_ORG and payload.get("organization_name") != TFC_ORG:
+        message = "Terraform Org verification failed : {}".format(payload.get("organization_name"))
         logging.warning(message)
-        result = False
+        return False, message
 
-    return result, message
+    return True, "OK"
 
 
 def validate_hmac(key: str, payload: str, signature: str) -> bool:

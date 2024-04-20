@@ -3,7 +3,7 @@ import vertexai
 from vertexai.preview.generative_models import GenerativeModel, Part
 import vertexai.preview.generative_models as generative_models
 
-class GoogleProject:
+class GoogleGenAI:
 
     def __init__(self, quota_project_id=None, scopes=None):
         self.project = None
@@ -40,5 +40,5 @@ class GoogleProject:
         return f":sparkles: Terraform AI debugger (powered by Google Gemini) :sparkles: \n\n + {response.text}"
 
 if __name__ == "__main__":
-    proj = GoogleProject()
+    proj = GoogleGenAI()
     proj.generate_content("I need help with my terraform code", stream=False)

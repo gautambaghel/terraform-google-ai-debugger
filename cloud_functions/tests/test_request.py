@@ -1,11 +1,11 @@
-import json
-import pytest
 import os
 import sys
+import json
+import pytest
+import requests_mock
+
 sys.path.insert(0, f"{os.path.dirname(__file__)}/../request")
 
-
-import requests_mock
 from unittest.mock import Mock
 from request import main
 
@@ -25,15 +25,15 @@ def test_request():
     return {"headers": headers, "payload": payload}
 
 
-def test__validate_request(test_request):
-    result, message = main.__validate_request(test_request["headers"], test_request["payload"])
+def test_validate_request(test_request):
+    result, message = main.validate_request(test_request["headers"], test_request["payload"])
     assert message == "OK"
     assert result == True
 
 
 def test_validate_hmac(test_request):
     key = "secret"
-    result = main.__validate_hmac(key, json.dumps(test_request["payload"]).encode("utf-8"), test_request["headers"]["x-tfe-notification-signature"])
+    result = main.validate_hmac(key, json.dumps(test_request["payload"]).encode("utf-8"), test_request["headers"]["x-tfe-notification-signature"])
     assert result == True
 
 
