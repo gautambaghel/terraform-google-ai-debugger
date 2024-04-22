@@ -18,14 +18,20 @@ def get_run_error(tfc_api_key: str, run_id: str) -> str:
 
     url = f"https://app.terraform.io/api/v2/runs/{run_id}"
     response = requests.get(f"{url}/plan", headers=headers)
-    if response.json()["data"]["attributes"]["status"] == "errored":
-        logs_url = response.json()["data"]["attributes"]["log-read-url"]
-        return requests.get(logs_url).text
+    try:
+        if response.json()["data"]["attributes"]["status"] == "errored":
+            logs_url = response.json()["data"]["attributes"]["log-read-url"]
+            return requests.get(logs_url).text
+    except KeyError:
+        pass
 
     response = requests.get(f"{url}/apply", headers=headers)
-    if response.json()["data"]["attributes"]["status"] == "errored":
-        logs_url = response.json()["data"]["attributes"]["log-read-url"]
-        return requests.get(logs_url).text
+    try:
+        if response.json()["data"]["attributes"]["status"] == "errored":
+            logs_url = response.json()["data"]["attributes"]["log-read-url"]
+            return requests.get(logs_url).text
+    except KeyError:
+        pass
 
     return "Terraform run successfully completed!"
 

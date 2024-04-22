@@ -55,7 +55,7 @@ def process_handler(request):
             )
 
             # Get error from Terraform Cloud
-            run_error_response, run_error_json_msg = get_run_error(tfc_api_key, run_id)
+            run_error_response = terraform_cloud.get_run_error(tfc_api_key, run_id)
             logging.info("Run error: " + str(run_error_response))
 
             ai = genai.GenAI(ai_config_json)
@@ -115,16 +115,3 @@ def get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
         message = "Failed to get the Terraform Cloud API key. Please check the secrets manager id and Terraform Cloud API key."
 
     return tfc_api_key, message
-
-
-def get_run_error(tfc_api_key: str, run_id: str) -> (dict, str):
-    message = ""
-    run_error_response = ""
-
-    try:
-        run_error_response = terraform_cloud.get_run_error(tfc_api_key, run_id)
-    except Exception as e:
-        logging.exception("Exception: {}".format(e))
-        message = "Failed to get error from the run in Terraform Cloud. Please check the Run id and Terraform Cloud API key."
-
-    return run_error_response, message
