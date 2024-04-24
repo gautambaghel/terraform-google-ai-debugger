@@ -22,5 +22,13 @@ main:
                 type: OIDC
         result: callback_result
 
-    - complete:
-        return: '$${callback_result}'
+    - cron:
+        call: http.post
+        args:
+            url: ${cron_url}
+            body:
+                task: $${input}
+                result: $${callback_result.body}
+            auth:
+                type: OIDC
+        result: cron_result

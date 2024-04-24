@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI debugger for Terraform is a tool designed to address runtime issues, enhancing the identification and resolution of challenges in deploying developer infrastructure. It leverages Google Cloud services and Terraform Cloud to optimize the remediation process.
+The AI debugger for Terraform is a solution designed to address runtime issues, enhancing the identification and resolution of challenges in deploying developer infrastructure. It leverages Google Cloud services and Terraform Cloud to optimize the remediation process.
 
 ![diagram](assets/debugger.gif)
 

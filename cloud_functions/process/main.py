@@ -39,7 +39,7 @@ def process_handler(request):
             run_id = payload["run_id"]
             tfc_api_secret_name = payload["tfc_api_secret_name"]
 
-            # Get TFC API key from Secret Manager
+            # Get Terraform API key from Secret Manager
             tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(tfc_api_secret_name)
             if secrets_mgr_error_msg != "" or tfc_api_key == "":
                 return send_cloud_funtion_response(secrets_mgr_error_msg, 422, "error")
@@ -50,8 +50,8 @@ def process_handler(request):
             run_error_response = terraform_cloud.get_run_error(tfc_api_key, run_id)
             logging.info("Run error: " + str(run_error_response))
 
-            proj = google_genai.GoogleGenAI()
-            content = proj.generate_content(run_error_response, stream=False)
+            genAI = google_genai.GoogleGenAI()
+            content = genAI.generate_content(run_error_response, stream=False)
 
             logging.info("Gemini response: " + str(content))
 

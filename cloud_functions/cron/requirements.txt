@@ -1,0 +1,8 @@
+functions-framework==3.4.0
+flask==2.3.2
+google-cloud-error-reporting==1.9.2
+google-cloud-logging==3.6.0
+requests==2.31.0
+google-cloud-secret-manager==2.19.0
+google-generativeai==0.4.1
+vertexai==1.46.0

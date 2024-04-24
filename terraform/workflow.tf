@@ -5,6 +5,7 @@ resource "google_workflows_workflow" "notification_workflow" {
   service_account = google_service_account.workflow.email
   source_contents = templatefile("${path.module}/files/workflow.yaml",
     {
+      "cron_url"     = google_cloudfunctions2_function.cron.url
       "callback_url" = google_cloudfunctions2_function.callback.url
       "process_url"  = google_cloudfunctions2_function.process.url
     }

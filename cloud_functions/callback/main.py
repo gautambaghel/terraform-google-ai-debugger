@@ -14,8 +14,8 @@ if "DISABLE_GOOGLE_LOGGING" not in os.environ:
     except google.auth.exceptions.DefaultCredentialsError:
         pass
 
-if 'LOG_LEVEL' in os.environ:
-    logging.getLogger().setLevel(os.environ['LOG_LEVEL'])
+if "LOG_LEVEL" in os.environ:
+    logging.getLogger().setLevel(os.environ["LOG_LEVEL"])
     logging.info("LOG_LEVEL set to %s" % logging.getLogger().getEffectiveLevel())
 
 
@@ -33,30 +33,49 @@ def callback_handler(request):
             request_valid, message = validate_request(payload)
 
             if request_valid:
-                # Get TFC API key from Secret Manager
-                tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(payload["tfc_api_secret_name"])
+                # Get Terraform API key from Secret Manager
+                tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(
+                    payload["tfc_api_secret_name"]
+                )
 
                 if secrets_mgr_error_msg or not tfc_api_key:
-                    return send_cloud_funtion_response(secrets_mgr_error_msg, 422, "error")
+                    return send_cloud_funtion_response(
+                        secrets_mgr_error_msg, 422, "error"
+                    )
 
-                logging.info("Secrets manager: successfully retrieved Terraform Cloud API key")
+                logging.info(
+                    "Secrets manager: successfully retrieved Terraform Cloud API key"
+                )
 
                 # Send comment back to Terraform Cloud
-                comment_response_json, comment_error_msg = attach_comment(payload["content"], tfc_api_key, payload["run_id"])
+                comment_response_json, comment_error_msg = attach_comment(
+                    payload["content"], tfc_api_key, payload["run_id"]
+                )
                 if comment_error_msg:
                     return send_cloud_funtion_response(comment_error_msg, 422, "error")
 
                 logging.info("Successfully created a comment in Terraform Cloud.")
+
+                # Deliver the payload for cron Cloud Function
+                cron_payload = {
+                    "tfc_api_secret_name": payload["tfc_api_secret_name"],
+                    "run_id": payload["run_id"],
+                }
+
+                logging.info("Delivering payload to cron Cloud Function")
+                return send_cloud_funtion_response(cron_payload, 200, "info")
             else:
                 return send_cloud_funtion_response(message, 422, "error")
         else:
-            return send_cloud_funtion_response("Payload missing in request", 422, "error")
-
-        return send_cloud_funtion_response("Callback completed!", 200, "info")
+            return send_cloud_funtion_response(
+                "Payload missing in request", 422, "error"
+            )
 
     except Exception as e:
         logging.exception("Terraform AI debugger callback error: {}".format(e))
-        return send_cloud_funtion_response("Internal Terraform AI debugger callback error occurred", 500, "error")
+        return send_cloud_funtion_response(
+            "Internal Terraform AI debugger callback error occurred", 500, "error"
+        )
 
 
 def send_cloud_funtion_response(message: str, code: int, type: str) -> (dict, int):
@@ -94,11 +113,13 @@ def get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
 
     try:
         client = google.cloud.secretmanager_v1.SecretManagerServiceClient()
-        response = client.access_secret_version(request={"name": f"{tfc_api_secret_name}/versions/latest"})
+        response = client.access_secret_version(
+            request={"name": f"{tfc_api_secret_name}/versions/latest"}
+        )
         tfc_api_key = response.payload.data.decode("UTF-8")
     except Exception as e:
         logging.exception("Exception: {}".format(e))
-        message = "Failed to get the Terraform Cloud API key. Please check the secrets manager id and TFC API key."
+        message = "Failed to get the Terraform Cloud API key. Please check the secrets manager id and Terraform API key."
 
     return tfc_api_key, message
 
@@ -113,14 +134,9 @@ def attach_comment(comment: str, tfc_api_key: str, run_id: str) -> (dict, str):
             "Content-Type": "application/vnd.api+json",
         }
 
-        data = json.dumps({
-            "data": {
-            "attributes": {
-                "body": f"{comment}"
-            },
-            "type": "comments"
-            }
-        })
+        data = json.dumps(
+            {"data": {"attributes": {"body": f"{comment}"}, "type": "comments"}}
+        )
 
         url = f"https://app.terraform.io/api/v2/runs/{run_id}/comments"
         response = requests.post(url, headers=headers, data=data)
@@ -131,6 +147,6 @@ def attach_comment(comment: str, tfc_api_key: str, run_id: str) -> (dict, str):
 
     except Exception as e:
         logging.exception("Exception: {}".format(e))
-        message = "Failed to create comment in Terraform Cloud. Please check the Run id and TFC API key."
+        message = "Failed to create comment in Terraform Cloud. Please check the Run id and Terraform API key."
 
     return comment_response_json, message
