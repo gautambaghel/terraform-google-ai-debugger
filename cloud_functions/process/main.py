@@ -29,7 +29,9 @@ else:
 def process_handler(request):
     try:
         logging.info("headers: " + str(request.headers))
-        logging.info("payload: " + str(request.get_data())) # Remove API token and log the payload
+        logging.info(
+            "payload: " + str(request.get_data())
+        )  # Remove API token and log the payload
 
         payload = request.get_json(silent=True)
         http_message = "{}"
@@ -40,14 +42,22 @@ def process_handler(request):
             tfc_api_secret_name = payload["tfc_api_secret_name"]
 
             # Get Terraform API key from Secret Manager
-            tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(tfc_api_secret_name)
+            tfc_api_key, secrets_mgr_error_msg = get_terraform_cloud_key(
+                tfc_api_secret_name
+            )
             if secrets_mgr_error_msg != "" or tfc_api_key == "":
                 return send_cloud_funtion_response(secrets_mgr_error_msg, 422, "error")
 
-            logging.info("Secrets manager: successfully retrieved Terraform Cloud API key")
+            logging.info(
+                "Secrets manager: successfully retrieved Terraform Cloud API key"
+            )
 
             # Get error from Terraform Cloud
             run_error_response = terraform_cloud.get_run_error(tfc_api_key, run_id)
+            if not run_error_response:
+                return send_cloud_funtion_response(
+                    "No plan/apply error found in the Terraform Cloud run", 422, "error"
+                )
             logging.info("Run error: " + str(run_error_response))
 
             genAI = google_genai.GoogleGenAI()
@@ -59,19 +69,25 @@ def process_handler(request):
             callback_payload = {
                 "tfc_api_secret_name": tfc_api_secret_name,
                 "content": content,
-                "run_id": run_id
+                "run_id": run_id,
             }
 
             logging.info("Delivering payload to callback Cloud Function")
             return send_cloud_funtion_response(callback_payload, 200, "info")
 
         else:
-            return send_cloud_funtion_response("Run ID or tfc_api_secret_name missing in request", 422, "error")
+            return send_cloud_funtion_response(
+                "Run ID or tfc_api_secret_name missing in request", 422, "error"
+            )
 
     # Error occurred return message
     except Exception as e:
         logging.exception("Notification process error: {}".format(e))
-        return send_cloud_funtion_response("Internal Terraform Cloud notification 'process' error occurred", 500, "error")
+        return send_cloud_funtion_response(
+            "Internal Terraform Cloud notification 'process' error occurred",
+            500,
+            "error",
+        )
 
 
 def send_cloud_funtion_response(message: str, code: int, type: str) -> (dict, int):
@@ -90,7 +106,9 @@ def get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
 
     try:
         client = google.cloud.secretmanager_v1.SecretManagerServiceClient()
-        response = client.access_secret_version(request={"name": f"{tfc_api_secret_name}/versions/latest"})
+        response = client.access_secret_version(
+            request={"name": f"{tfc_api_secret_name}/versions/latest"}
+        )
         tfc_api_key = response.payload.data.decode("UTF-8")
     except Exception as e:
         logging.exception("Exception: {}".format(e))

@@ -33,7 +33,8 @@ def get_run_error(tfc_api_key: str, run_id: str) -> str:
     except KeyError:
         pass
 
-    return "Terraform run successfully completed!"
+    return None
+
 
 if __name__ == "__main__":
 

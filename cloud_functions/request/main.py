@@ -54,8 +54,8 @@ if "NOTIFICATION_WORKFLOW" in os.environ:
 else:
     NOTIFICATION_WORKFLOW = False
 
-if 'LOG_LEVEL' in os.environ:
-    logging.getLogger().setLevel(os.environ['LOG_LEVEL'])
+if "LOG_LEVEL" in os.environ:
+    logging.getLogger().setLevel(os.environ["LOG_LEVEL"])
     logging.info("LOG_LEVEL set to %s" % logging.getLogger().getEffectiveLevel())
 
 
@@ -75,7 +75,9 @@ def request_handler(request):
             http_code = 500
             logging.error(http_message)
         elif not TFC_API_SECRET_NAME:
-            http_message = "TFC_API_SECRET_NAME key environment variable missing on server"
+            http_message = (
+                "TFC_API_SECRET_NAME key environment variable missing on server"
+            )
             http_code = 500
             logging.error(http_message)
         elif not GOOGLE_PROJECT:
@@ -94,7 +96,7 @@ def request_handler(request):
             result, message = validate_request(request_headers, request_payload)
             if result:
                 # Check HMAC signature
-                signature = request_headers['x-tfe-notification-signature']
+                signature = request_headers["x-tfe-notification-signature"]
                 # Need to use request.get_data() for hmac digest
                 if validate_hmac(HMAC_KEY, request.get_data(), signature):
                     try:
@@ -155,7 +157,9 @@ def validate_request(headers, payload) -> (bool, str):
         return False, message
 
     if TFC_ORG and payload.get("organization_name") != TFC_ORG:
-        message = "Terraform Org verification failed : {}".format(payload.get("organization_name"))
+        message = "Terraform Org verification failed : {}".format(
+            payload.get("organization_name")
+        )
         logging.warning(message)
         return False, message
 
@@ -165,7 +169,9 @@ def validate_request(headers, payload) -> (bool, str):
 def validate_hmac(key: str, payload: str, signature: str) -> bool:
     """Returns true if the x-tfe-notification-signature header matches the SHA512 digest of the payload"""
 
-    digest = hmac.new(bytes(key, 'utf-8'), msg=payload, digestmod=hashlib.sha512).hexdigest()
+    digest = hmac.new(
+        bytes(key, "utf-8"), msg=payload, digestmod=hashlib.sha512
+    ).hexdigest()
     result = hmac.compare_digest(digest, signature)
 
     if not result:
@@ -174,8 +180,12 @@ def validate_hmac(key: str, payload: str, signature: str) -> bool:
     return result
 
 
-def execute_workflow(payload: dict, project: str = GOOGLE_PROJECT, location: str = GOOGLE_REGION,
-                       workflow: str = NOTIFICATION_WORKFLOW) -> Execution:
+def execute_workflow(
+    payload: dict,
+    project: str = GOOGLE_PROJECT,
+    location: str = GOOGLE_REGION,
+    workflow: str = NOTIFICATION_WORKFLOW,
+) -> Execution:
     """
     Execute a workflow and print the execution results
 

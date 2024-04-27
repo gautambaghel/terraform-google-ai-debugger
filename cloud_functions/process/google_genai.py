@@ -3,6 +3,7 @@ import vertexai
 from vertexai.preview.generative_models import GenerativeModel, Part
 import vertexai.preview.generative_models as generative_models
 
+
 class GoogleGenAI:
 
     def __init__(self, quota_project_id=None, scopes=None):
@@ -10,14 +11,13 @@ class GoogleGenAI:
         self.quota_project_id = quota_project_id
 
         if scopes is None:
-            self.scopes = [
-                "https://www.googleapis.com/auth/cloud-platform"
-            ]
+            self.scopes = ["https://www.googleapis.com/auth/cloud-platform"]
         else:
             self.scopes = scopes
 
-        credentials, default_project_id = google.auth.default(quota_project_id=self.quota_project_id,
-                                                              scopes=self.scopes)
+        credentials, default_project_id = google.auth.default(
+            quota_project_id=self.quota_project_id, scopes=self.scopes
+        )
         vertexai.init(project=default_project_id, location="us-central1")
         self.model = GenerativeModel("gemini-1.0-pro-001")
 
@@ -27,7 +27,7 @@ class GoogleGenAI:
             generation_config={
                 "max_output_tokens": 5535,
                 "temperature": 0.7,
-                "top_p": 1
+                "top_p": 1,
             },
             safety_settings={
                 generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
@@ -38,6 +38,7 @@ class GoogleGenAI:
             stream=stream,
         )
         return f":sparkles: Terraform AI debugger (powered by Google Gemini) :sparkles: \n\n + {response.text}"
+
 
 if __name__ == "__main__":
     proj = GoogleGenAI()

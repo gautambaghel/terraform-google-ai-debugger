@@ -3,6 +3,64 @@ import json
 import google.cloud.secretmanager_v1
 
 
+def get_run_error(tfc_api_key: str, run_id: str) -> str:
+    """
+    Get Terraform run error via API
+
+    :param tfc_api_key: Terraform Cloud  API access token
+    :param run_id: The run id to get the plan or apply error
+    :return: response as dict
+    """
+
+    headers = {
+        "Authorization": f"Bearer {tfc_api_key}",
+        "Content-Type": "application/vnd.api+json",
+    }
+
+    url = f"https://app.terraform.io/api/v2/runs/{run_id}"
+    response = requests.get(f"{url}/plan", headers=headers)
+    try:
+        if response.json()["data"]["attributes"]["status"] == "errored":
+            logs_url = response.json()["data"]["attributes"]["log-read-url"]
+            return requests.get(logs_url).text
+    except KeyError:
+        pass
+
+    response = requests.get(f"{url}/apply", headers=headers)
+    try:
+        if response.json()["data"]["attributes"]["status"] == "errored":
+            logs_url = response.json()["data"]["attributes"]["log-read-url"]
+            return requests.get(logs_url).text
+    except KeyError:
+        pass
+
+    return None
+
+
+def get_comment_time(run_event_id: str, tfc_api_key: str) -> str:
+    """
+    Get the time of the comment event
+
+    :param run_event_id: The run event id to get the comment time
+    :return: response as string
+    """
+    headers = {
+        "Authorization": f"Bearer {tfc_api_key}",
+        "Content-Type": "application/vnd.api+json",
+    }
+
+    url = f"https://app.terraform.io/api/v2/run-events/{run_event_id}"
+    response = requests.get(url, headers=headers)
+    try:
+        if response.json()["data"]["attributes"]["action"] == "commented":
+            comment_creation_time = response.json()["data"]["attributes"]["created-at"]
+            return comment_creation_time
+    except KeyError:
+        pass
+
+    return None
+
+
 def get_terraform_cloud_key(tfc_api_secret_name: str) -> (str, str):
     """
     Get the Terraform Cloud API key from the secrets manager.
